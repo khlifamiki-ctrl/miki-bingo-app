@@ -1,22 +1,183 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Miki Bingo</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #1b1f2a;
-      color: #fff;
-      text-align: center;
-      padding: 40px 16px;
-    }
-    h1 { color: #f5c542; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Miki Bingo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #1a1d2e;
+    --card: #242842;
+    --gold: #f5c518;
+    --text: #f2f3f8;
+    --muted: #9aa0bd;
+    --line: #333857;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  }
+  main { max-width: 480px; margin: 0 auto; padding: 20px 16px 32px; }
+  header { text-align: center; margin-bottom: 20px; }
+  h1 { margin: 0; color: var(--gold); font-size: 30px; letter-spacing: 0.5px; }
+  #hello { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .label { color: var(--muted); font-size: 14px; }
+  #balance { font-size: 44px; font-weight: 700; color: var(--gold); margin: 4px 0; }
+  #rank { color: var(--muted); font-size: 14px; }
+  h2 { margin: 0 0 12px; font-size: 18px; }
+  ol { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  li:last-child { border-bottom: none; }
+  .pos { width: 32px; text-align: center; font-size: 18px; }
+  .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .coins { color: var(--gold); font-weight: 600; }
+  .empty { color: var(--muted); text-align: center; padding: 12px 0; }
+  button {
+    width: 100%;
+    background: var(--gold);
+    color: #1a1d2e;
+    border: 0;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  button:active { opacity: 0.8; }
+  #status { color: var(--muted); font-size: 13px; text-align: center; min-height: 18px; margin: 12px 0; }
+  .note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 18px; }
+</style>
 </head>
 <body>
-  <h1>Miki Bingo</h1>
-  <p>ቢንጎ በቅርብ ቀን ይመጣል!</p>
+<main>
+  <header>
+    <h1>🎱 Miki Bingo</h1>
+    <p id="hello">እንኳን ደህና መጣህ!</p>
+  </header>
+
+  <section class="card">
+    <div class="label">💰 ቀሪ ሂሳብ</div>
+    <div id="balance">—</div>
+    <div id="rank"></div>
+  </section>
+
+  <section class="card">
+    <h2>🏆 ከፍተኛ ተጫዋቾች</h2>
+    <ol id="top"></ol>
+  </section>
+
+  <button id="refresh" type="button">🔄 አድስ</button>
+  <p id="status"></p>
+
+  <p class="note">ነጥቦቹ ለጨዋታ ብቻ ናቸው። በእውነተኛ ገንዘብ አይገዙም ወይም አይወጡም።</p>
+</main>
+
+<script>
+(function () {
+  // The bot's public address goes here in the next step (for example "https://your-bot.up.railway.app").
+  // NEVER put the bot TOKEN or any secret in this file: this repository is public.
+  var API_URL = "";
+
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+  var initData = tg && tg.initData ? tg.initData : "";
+
+  function el(id) { return document.getElementById(id); }
+  function setStatus(text) { el("status").textContent = text || ""; }
+  function fmt(n) { return Number(n || 0).toLocaleString("en-US"); }
+
+  var DEMO = {
+    name: "Miki",
+    balance: 150,
+    rank: 2,
+    top: [
+      { name: "Abel", balance: 420 },
+      { name: "Miki", balance: 150 },
+      { name: "Sara", balance: 90 }
+    ]
+  };
+
+  // Names come from other players, so they are always inserted as plain text (never as HTML).
+  function render(d) {
+    el("hello").textContent = d.name ? "ሰላም " + d.name + " 👋" : "እንኳን ደህና መጣህ!";
+    el("balance").textContent = fmt(d.balance);
+    el("rank").textContent = d.rank ? "📍 ደረጃህ: #" + d.rank : "";
+
+    var list = el("top");
+    list.textContent = "";
+    var rows = d.top || [];
+    if (!rows.length) {
+      var empty = document.createElement("li");
+      empty.className = "empty";
+      empty.textContent = "ገና ተጫዋች የለም";
+      list.appendChild(empty);
+      return;
+    }
+    var medals = ["🥇", "🥈", "🥉"];
+    rows.forEach(function (row, i) {
+      var li = document.createElement("li");
+      var pos = document.createElement("span");
+      pos.className = "pos";
+      pos.textContent = i < 3 ? medals[i] : String(i + 1);
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = row.name || "Player";
+      var coins = document.createElement("span");
+      coins.className = "coins";
+      coins.textContent = fmt(row.balance);
+      li.appendChild(pos);
+      li.appendChild(name);
+      li.appendChild(coins);
+      list.appendChild(li);
+    });
+  }
+
+  function load() {
+    // Opened in a normal browser (not inside Telegram): show sample data so you can see the design.
+    if (!initData) {
+      render(DEMO);
+      setStatus("ማሳያ ሁነታ: ይህ ናሙና ዳታ ነው። በ Telegram ውስጥ ሲከፈት እውነተኛ ዳታ ይታያል።");
+      return;
+    }
+    if (!API_URL) {
+      setStatus("ቦቱ ገና አልተገናኘም። (API_URL ባዶ ነው)");
+      return;
+    }
+    setStatus("እየጫነ ነው...");
+    fetch(API_URL + "/api/me", { headers: { "X-Telegram-Init-Data": initData } })
+      .then(function (r) {
+        if (!r.ok) { throw new Error("HTTP " + r.status); }
+        return r.json();
+      })
+      .then(function (data) {
+        render(data);
+        setStatus("");
+      })
+      .catch(function () {
+        setStatus("ከቦቱ ጋር መገናኘት አልተቻለም። እንደገና ሞክር።");
+      });
+  }
+
+  el("refresh").addEventListener("click", load);
+  load();
+})();
+</script>
 </body>
 </html>
