@@ -33,7 +33,7 @@
   .tab {
     flex: 1; background: var(--card); color: var(--muted);
     border: 1px solid var(--line); border-radius: 12px;
-    padding: 11px 8px; font-size: 15px; font-weight: 600;
+    padding: 10px 2px; font-size: 13px; font-weight: 600; min-width: 0;
   }
   .tab.active { background: var(--gold); color: #1a1d2e; border-color: var(--gold); }
 
@@ -49,11 +49,11 @@
   #rank { color: var(--muted); font-size: 14px; }
   h2 { margin: 0 0 12px; font-size: 18px; }
   ol { list-style: none; margin: 0; padding: 0; }
-  li {
+  #top li {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 0; border-bottom: 1px solid var(--line);
   }
-  li:last-child { border-bottom: none; }
+  #top li:last-child { border-bottom: none; }
   .pos { width: 32px; text-align: center; font-size: 18px; }
   .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .coins { color: var(--gold); font-weight: 600; }
@@ -98,6 +98,27 @@
   .msg { min-height: 22px; text-align: center; margin-top: 10px; font-weight: 600; }
   .msg.win { color: var(--green); }
   .msg.bad { color: #ff7b7b; }
+
+  /* ---- profile + help ---- */
+  .who { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .avatar {
+    width: 60px; height: 60px; border-radius: 50%; flex: none;
+    background: var(--gold); color: #1a1d2e; font-size: 28px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .who-name { font-size: 20px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .who-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .kv { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .kv .k { color: var(--muted); }
+  .kv .v { font-weight: 700; color: var(--gold); text-align: right; word-break: break-all; }
+  .linkbox {
+    background: #1a1d2e; border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; font-size: 13px; color: var(--muted); word-break: break-all; margin: 8px 0 10px;
+  }
+  .help-item { padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+  .help-item:first-of-type { border-top: none; }
+  .help-item b { color: var(--gold); }
+  .help-item .cmd { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--text); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -110,6 +131,8 @@
   <nav class="tabs">
     <button class="tab active" id="tabHomeBtn" type="button">🏠 መነሻ</button>
     <button class="tab" id="tabPlayBtn" type="button">🎮 ልምምድ</button>
+    <button class="tab" id="tabProfileBtn" type="button">👤 መገለጫ</button>
+    <button class="tab" id="tabHelpBtn" type="button">ℹ️ እገዛ</button>
   </nav>
 
   <div id="tabHome">
@@ -151,6 +174,54 @@
     <p class="note">ይህ የልምምድ ጨዋታ ነው፤ ቁጥሮች በራስ-ሰር ይወጣሉ፣ አይደጋገሙም። ሙሉ ረድፍ፣ አምድ ወይም ሰያፍ ሲሞላ BINGO! ተጫን።</p>
   </div>
 
+  <div id="tabProfile" hidden>
+    <section class="card">
+      <div class="who">
+        <div class="avatar" id="avatar">?</div>
+        <div style="min-width:0">
+          <div class="who-name" id="pName">—</div>
+          <div class="who-sub" id="pRank"></div>
+        </div>
+      </div>
+      <div class="kv"><span class="k">💰 ቀሪ ሂሳብ</span><span class="v" id="pBalance">—</span></div>
+      <div class="kv"><span class="k">🆔 የእኔ ID</span><span class="v" id="pId">—</span></div>
+      <button class="btn ghost" id="copyId" type="button" style="margin-top:10px">📋 ID ቅዳ (ሳንቲም ለመቀበል)</button>
+    </section>
+
+    <section class="card">
+      <h2>👥 ጓደኛ ጋብዝ</h2>
+      <div class="who-sub">ጓደኛህ በአንተ link ሲገባ አንተ <b style="color:var(--gold)">+100</b>፣ እሱ <b style="color:var(--gold)">+50</b> ሳንቲም ያገኛል።</div>
+      <div class="linkbox" id="refLink">—</div>
+      <div class="row">
+        <button class="btn" id="shareLink" type="button">📤 አጋራ</button>
+        <button class="btn ghost" id="copyLink" type="button">📋 ቅዳ</button>
+      </div>
+      <div class="msg" id="profMsg"></div>
+    </section>
+  </div>
+
+  <div id="tabHelp" hidden>
+    <section class="card help">
+      <h2>🎮 በ Mini App ውስጥ ልምምድ</h2>
+      <div class="help-item"><b>1.</b> «🎮 ልምምድ» ውስጥ <span class="cmd">አዲስ ጨዋታ</span> ተጫን፤ 5×5 ካርድ ታገኛለህ (መሃሉ ★ ነጻ ነው)።</div>
+      <div class="help-item"><b>2.</b> በየ3 ሰከንዱ አንድ ቁጥር (1-75) በራስ-ሰር ይወጣል፤ ቁጥር አይደገምም። ካርድህ ላይ ያለ ቁጥር ሲወጣ ወርቃማ ይሆናል።</div>
+      <div class="help-item"><b>3.</b> ሙሉ <b>ረድፍ፣ አምድ ወይም ሰያፍ</b> ሲሞላ <span class="cmd">BINGO!</span> አረንጓዴ ሆኖ ይርገበገባል፤ ተጭነህ አሸንፍ።</div>
+    </section>
+
+    <section class="card help">
+      <h2>🤖 በቦቱ ውስጥ ያሉ ጨዋታዎች</h2>
+      <div class="help-item"><span class="cmd">/spin</span> — ነጻ፣ በሰዓት አንዴ፤ 10-100 ሳንቲም።</div>
+      <div class="help-item"><span class="cmd">/daily</span> — ነጻ፣ በቀን አንዴ፤ +100 ሳንቲም።</div>
+      <div class="help-item"><span class="cmd">/dice</span> — 20 ሳንቲም፤ 6 ሲመጣ 100 ያሸንፋሉ።</div>
+      <div class="help-item"><span class="cmd">/bingo</span> — 10 ሳንቲም፤ ከ90 በላይ ሲመጣ 80 ያሸንፋሉ።</div>
+      <div class="help-item"><span class="cmd">/jackpot</span> — 50 ሳንቲም፤ 1/20 እድል፣ 800 ሳንቲም።</div>
+      <div class="help-item"><span class="cmd">/live</span> — 10 ሳንቲም፤ ከሌሎች ተጫዋቾች ጋር የቀጥታ ዙር፤ አሸናፊው ሙሉውን ድስት ይወስዳል።</div>
+      <div class="help-item"><span class="cmd">/send</span> — ለጓደኛ ሳንቲም ላክ (<span class="cmd">/send ID ብዛት</span>)። ID በ«መገለጫ» ውስጥ ይገኛል።</div>
+      <div class="help-item"><span class="cmd">/top</span> — ከፍተኛ ተጫዋቾች፤ <span class="cmd">/balance</span> — ቀሪ ሂሳብ።</div>
+      <div class="help-item">ዋጋዎች እና ሽልማቶች ሊቀየሩ ይችላሉ።</div>
+    </section>
+  </div>
+
   <p class="note">ነጥቦቹ ለጨዋታ ብቻ ናቸው። በእውነተኛ ገንዘብ አይገዙም ወይም አይወጡም።</p>
 </main>
 
@@ -184,7 +255,9 @@
   };
 
   // Names come from other players, so they are always inserted as plain text (never as HTML).
+  var lastData = DEMO;
   function render(d) {
+    lastData = d;
     el("hello").textContent = d.name ? "ሰላም " + d.name + " 👋" : "እንኳን ደህና መጣህ!";
     el("balance").textContent = fmt(d.balance);
     el("rank").textContent = d.rank ? "📍 ደረጃህ: #" + d.rank : "";
@@ -411,19 +484,84 @@
     updateButtons();
   }
 
-  /* ---------------- tabs ---------------- */
+  /* ---------------- profile ---------------- */
 
-  function showTab(name) {
-    var play = name === "play";
-    el("tabHome").hidden = play;
-    el("tabPlay").hidden = !play;
-    el("tabHomeBtn").classList.toggle("active", !play);
-    el("tabPlayBtn").classList.toggle("active", play);
-    if (!play && game.active && !game.paused) { game.paused = true; updateButtons(); }
+  var BOT_USERNAME = "miki_bingo_bot";
+
+  function myId() {
+    var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    return u && u.id ? String(u.id) : "";
+  }
+  function refLink() {
+    var id = myId();
+    return id ? "https://t.me/" + BOT_USERNAME + "?start=" + id : "";
+  }
+  function profMsg(text) { el("profMsg").textContent = text || ""; }
+
+  function renderProfile() {
+    var d = lastData || DEMO;
+    var id = myId() || (initData ? "" : "123456789");
+    var name = d.name || "Player";
+    el("avatar").textContent = name.charAt(0).toUpperCase();
+    el("pName").textContent = name;
+    el("pRank").textContent = d.rank ? "📍 ደረጃ #" + d.rank : "";
+    el("pBalance").textContent = fmt(d.balance);
+    el("pId").textContent = id || "—";
+    el("refLink").textContent = id ? "https://t.me/" + BOT_USERNAME + "?start=" + id : "—";
   }
 
-  el("tabHomeBtn").addEventListener("click", function () { showTab("home"); });
-  el("tabPlayBtn").addEventListener("click", function () { showTab("play"); });
+  function copyText(text, okMsg) {
+    if (!text) { profMsg("ገና አልተገኘም።"); return; }
+    function done() { profMsg(okMsg); haptic("success"); }
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { profMsg("መቅዳት አልተቻለም። በእጅ ቅዳ።"); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  function shareLink() {
+    var link = refLink();
+    if (!link) { profMsg("በ Telegram ውስጥ ሲከፈት ይሠራል።"); return; }
+    var text = "🎱 Miki Bingo ተጫወት! በዚህ link ግባና 50 ሳንቲም ተቀበል።";
+    var url = "https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent(text);
+    try {
+      if (tg && tg.openTelegramLink) { tg.openTelegramLink(url); }
+      else { window.open(url, "_blank"); }
+    } catch (e) { copyText(link, "✅ link ተቀድቷል"); }
+  }
+
+  /* ---------------- tabs ---------------- */
+
+  var TABS = ["home", "play", "profile", "help"];
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function showTab(name) {
+    TABS.forEach(function (t) {
+      el("tab" + cap(t)).hidden = t !== name;
+      el("tab" + cap(t) + "Btn").classList.toggle("active", t === name);
+    });
+    if (name !== "play" && game.active && !game.paused) { game.paused = true; updateButtons(); }
+    if (name === "profile") { profMsg(""); renderProfile(); }
+  }
+
+  TABS.forEach(function (t) {
+    el("tab" + cap(t) + "Btn").addEventListener("click", function () { showTab(t); });
+  });
+  el("copyId").addEventListener("click", function () { copyText(myId() || (initData ? "" : "123456789"), "✅ ID ተቀድቷል"); });
+  el("copyLink").addEventListener("click", function () { copyText(refLink() || (initData ? "" : "https://t.me/" + BOT_USERNAME + "?start=123456789"), "✅ link ተቀድቷል"); });
+  el("shareLink").addEventListener("click", shareLink);
   el("refresh").addEventListener("click", load);
   el("newGame").addEventListener("click", newGame);
   el("bingoBtn").addEventListener("click", claim);
