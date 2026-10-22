@@ -13,6 +13,7 @@
     --text: #f2f3f8;
     --muted: #9aa0bd;
     --line: #333857;
+    --green: #3ecf8e;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -23,9 +24,19 @@
     padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
   }
   main { max-width: 480px; margin: 0 auto; padding: 20px 16px 32px; }
-  header { text-align: center; margin-bottom: 20px; }
+  header { text-align: center; margin-bottom: 16px; }
   h1 { margin: 0; color: var(--gold); font-size: 30px; letter-spacing: 0.5px; }
   #hello { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+  [hidden] { display: none !important; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    flex: 1; background: var(--card); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 11px 8px; font-size: 15px; font-weight: 600;
+  }
+  .tab.active { background: var(--gold); color: #1a1d2e; border-color: var(--gold); }
+
   .card {
     background: var(--card);
     border: 1px solid var(--line);
@@ -39,30 +50,54 @@
   h2 { margin: 0 0 12px; font-size: 18px; }
   ol { list-style: none; margin: 0; padding: 0; }
   li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
   }
   li:last-child { border-bottom: none; }
   .pos { width: 32px; text-align: center; font-size: 18px; }
   .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .coins { color: var(--gold); font-weight: 600; }
   .empty { color: var(--muted); text-align: center; padding: 12px 0; }
-  button {
-    width: 100%;
-    background: var(--gold);
-    color: #1a1d2e;
-    border: 0;
-    border-radius: 12px;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 700;
+
+  .btn {
+    width: 100%; background: var(--gold); color: #1a1d2e;
+    border: 0; border-radius: 12px; padding: 14px;
+    font-size: 16px; font-weight: 700;
   }
-  button:active { opacity: 0.8; }
+  .btn:active { opacity: 0.8; }
+  .btn:disabled { opacity: 0.35; }
+  .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  .row .btn { flex: 1; }
+
   #status { color: var(--muted); font-size: 13px; text-align: center; min-height: 18px; margin: 12px 0; }
   .note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 18px; }
+
+  /* ---- practice bingo ---- */
+  .ballrow { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .ball {
+    width: 76px; height: 76px; border-radius: 50%; flex: none;
+    background: radial-gradient(circle at 35% 30%, #fff, #d9dcef 70%);
+    color: #1a1d2e; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  }
+  .callinfo { flex: 1; min-width: 0; }
+  #callCount { font-size: 15px; font-weight: 700; }
+  .recent { color: var(--muted); font-size: 13px; margin-top: 4px; word-break: break-word; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 14px; }
+  .gh { text-align: center; font-weight: 800; color: var(--gold); font-size: 18px; padding: 2px 0; }
+  .cell {
+    aspect-ratio: 1; border-radius: 10px; background: #1a1d2e;
+    border: 1px solid var(--line); display: flex; align-items: center;
+    justify-content: center; font-size: 18px; font-weight: 700;
+  }
+  .cell.on { background: var(--gold); color: #1a1d2e; border-color: var(--gold); }
+  .cell.free { background: #3a3f66; color: var(--gold); }
+  .btn.ready { background: var(--green); animation: pulse 1s infinite; }
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  .msg { min-height: 22px; text-align: center; margin-top: 10px; font-weight: 600; }
+  .msg.win { color: var(--green); }
+  .msg.bad { color: #ff7b7b; }
 </style>
 </head>
 <body>
@@ -72,27 +107,56 @@
     <p id="hello">እንኳን ደህና መጣህ!</p>
   </header>
 
-  <section class="card">
-    <div class="label">💰 ቀሪ ሂሳብ</div>
-    <div id="balance">—</div>
-    <div id="rank"></div>
-  </section>
+  <nav class="tabs">
+    <button class="tab active" id="tabHomeBtn" type="button">🏠 መነሻ</button>
+    <button class="tab" id="tabPlayBtn" type="button">🎮 ልምምድ</button>
+  </nav>
 
-  <section class="card">
-    <h2>🏆 ከፍተኛ ተጫዋቾች</h2>
-    <ol id="top"></ol>
-  </section>
+  <div id="tabHome">
+    <section class="card">
+      <div class="label">💰 ቀሪ ሂሳብ</div>
+      <div id="balance">—</div>
+      <div id="rank"></div>
+    </section>
 
-  <button id="refresh" type="button">🔄 አድስ</button>
-  <p id="status"></p>
+    <section class="card">
+      <h2>🏆 ከፍተኛ ተጫዋቾች</h2>
+      <ol id="top"></ol>
+    </section>
+
+    <button class="btn" id="refresh" type="button">🔄 አድስ</button>
+    <p id="status"></p>
+  </div>
+
+  <div id="tabPlay" hidden>
+    <section class="card">
+      <div class="ballrow">
+        <div class="ball" id="ball">—</div>
+        <div class="callinfo">
+          <div id="callCount">0 / 75</div>
+          <div class="recent" id="recent">«አዲስ ጨዋታ» ተጫን</div>
+        </div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <button class="btn" id="bingoBtn" type="button" disabled>🎯 BINGO!</button>
+      <div class="msg" id="playMsg"></div>
+
+      <div class="row">
+        <button class="btn ghost" id="newGame" type="button">▶️ አዲስ ጨዋታ</button>
+        <button class="btn ghost" id="pauseBtn" type="button" disabled>⏸ አቁም</button>
+      </div>
+    </section>
+    <p class="note">ይህ የልምምድ ጨዋታ ነው፤ ቁጥሮች በራስ-ሰር ይወጣሉ፣ አይደጋገሙም። ሙሉ ረድፍ፣ አምድ ወይም ሰያፍ ሲሞላ BINGO! ተጫን።</p>
+  </div>
 
   <p class="note">ነጥቦቹ ለጨዋታ ብቻ ናቸው። በእውነተኛ ገንዘብ አይገዙም ወይም አይወጡም።</p>
 </main>
 
 <script>
 (function () {
-  // The bot's public address goes here in the next step (for example "https://your-bot.up.railway.app").
-  // NEVER put the bot TOKEN or any secret in this file: this repository is public.
+  // The bot's public address. NEVER put the bot TOKEN or any secret in this file: this repository is public.
   var API_URL = "https://miki-bingo-bot-production-22f0.up.railway.app";
 
   var tg = window.Telegram && window.Telegram.WebApp;
@@ -102,6 +166,11 @@
   function el(id) { return document.getElementById(id); }
   function setStatus(text) { el("status").textContent = text || ""; }
   function fmt(n) { return Number(n || 0).toLocaleString("en-US"); }
+  function haptic(kind) {
+    try { tg.HapticFeedback.notificationOccurred(kind); } catch (e) {}
+  }
+
+  /* ---------------- home tab: balance + leaderboard ---------------- */
 
   var DEMO = {
     name: "Miki",
@@ -175,7 +244,191 @@
       });
   }
 
+  /* ---------------- practice bingo (runs fully in the browser) ---------------- */
+
+  var DRAW_MS = 3000;          // one number every 3 seconds
+  var LETTERS = "BINGO";
+  var game = { card: null, cells: [], drawn: [], pool: [], timer: null, active: false, paused: false };
+
+  function ballName(n) { return LETTERS.charAt(Math.floor((n - 1) / 15)) + "-" + n; }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  // 5x5 card: B 1-15, I 16-30, N 31-45, G 46-60, O 61-75. The centre (0) is free.
+  function makeCard() {
+    var cols = [];
+    for (var c = 0; c < 5; c++) {
+      var nums = [];
+      for (var k = 1 + 15 * c; k <= 15 + 15 * c; k++) { nums.push(k); }
+      cols.push(shuffle(nums).slice(0, 5));
+    }
+    var card = [];
+    for (var r = 0; r < 5; r++) {
+      var row = [];
+      for (var cc = 0; cc < 5; cc++) { row.push(cols[cc][r]); }
+      card.push(row);
+    }
+    card[2][2] = 0;
+    return card;
+  }
+
+  function hasBingo(card, drawnSet) {
+    function ok(v) { return v === 0 || drawnSet[v] === true; }
+    var i, j, all;
+    for (i = 0; i < 5; i++) {
+      all = true;
+      for (j = 0; j < 5; j++) { if (!ok(card[i][j])) { all = false; break; } }
+      if (all) { return true; }
+      all = true;
+      for (j = 0; j < 5; j++) { if (!ok(card[j][i])) { all = false; break; } }
+      if (all) { return true; }
+    }
+    all = true;
+    for (i = 0; i < 5; i++) { if (!ok(card[i][i])) { all = false; break; } }
+    if (all) { return true; }
+    all = true;
+    for (i = 0; i < 5; i++) { if (!ok(card[i][4 - i])) { all = false; break; } }
+    return all;
+  }
+
+  function drawnSet() {
+    var s = {};
+    game.drawn.forEach(function (n) { s[n] = true; });
+    return s;
+  }
+
+  function buildGrid() {
+    var grid = el("grid");
+    grid.textContent = "";
+    game.cells = [];
+    for (var h = 0; h < 5; h++) {
+      var head = document.createElement("div");
+      head.className = "gh";
+      head.textContent = LETTERS.charAt(h);
+      grid.appendChild(head);
+    }
+    for (var r = 0; r < 5; r++) {
+      for (var c = 0; c < 5; c++) {
+        var v = game.card[r][c];
+        var cell = document.createElement("div");
+        cell.className = "cell" + (v === 0 ? " free" : "");
+        cell.textContent = v === 0 ? "★" : String(v);
+        cell.setAttribute("data-n", String(v));
+        grid.appendChild(cell);
+        game.cells.push({ el: cell, n: v });
+      }
+    }
+  }
+
+  function setMsg(text, cls) {
+    var m = el("playMsg");
+    m.textContent = text || "";
+    m.className = "msg" + (cls ? " " + cls : "");
+  }
+
+  function updateButtons() {
+    el("bingoBtn").disabled = !game.active;
+    el("pauseBtn").disabled = !game.active;
+    el("pauseBtn").textContent = game.paused ? "▶️ ቀጥል" : "⏸ አቁም";
+  }
+
+  function stopTimer() {
+    if (game.timer) { clearInterval(game.timer); game.timer = null; }
+  }
+
+  function startTimer() {
+    stopTimer();
+    game.timer = setInterval(drawNext, DRAW_MS);
+  }
+
+  function drawNext() {
+    if (!game.active || game.paused) { return; }
+    if (!game.pool.length) {
+      game.active = false;
+      stopTimer();
+      el("bingoBtn").classList.remove("ready");
+      setMsg("ሁሉም 75 ቁጥሮች ወጥተዋል። አዲስ ጨዋታ ጀምር!", "bad");
+      updateButtons();
+      return;
+    }
+    var n = game.pool.pop();
+    game.drawn.push(n);
+    el("ball").textContent = ballName(n);
+    el("callCount").textContent = game.drawn.length + " / 75";
+    var before = game.drawn.slice(-6, -1).reverse().map(ballName).join(", ");
+    el("recent").textContent = before ? "ከዚህ በፊት: " + before : "";
+    game.cells.forEach(function (c) {
+      if (c.n === n) { c.el.classList.add("on"); }
+    });
+    // The button lights up when a full line exists (like the AUTO mode in other bingo apps).
+    el("bingoBtn").classList.toggle("ready", hasBingo(game.card, drawnSet()));
+  }
+
+  function newGame() {
+    stopTimer();
+    var pool = [];
+    for (var i = 1; i <= 75; i++) { pool.push(i); }
+    game.card = makeCard();
+    game.pool = shuffle(pool);
+    game.drawn = [];
+    game.active = true;
+    game.paused = false;
+    buildGrid();
+    el("ball").textContent = "—";
+    el("callCount").textContent = "0 / 75";
+    el("recent").textContent = "ቁጥሮች ሊወጡ ነው...";
+    el("bingoBtn").classList.remove("ready");
+    setMsg("");
+    updateButtons();
+    drawNext();
+    startTimer();
+  }
+
+  function claim() {
+    if (!game.active) { return; }
+    if (hasBingo(game.card, drawnSet())) {
+      game.active = false;
+      stopTimer();
+      el("bingoBtn").classList.remove("ready");
+      setMsg("🏆 BINGO! አሸንፈሃል! (" + game.drawn.length + " ቁጥሮች ከወጡ በኋላ)", "win");
+      haptic("success");
+      updateButtons();
+    } else {
+      setMsg("❌ ገና BINGO አይደለም። ቀጥል!", "bad");
+      haptic("error");
+    }
+  }
+
+  function togglePause() {
+    if (!game.active) { return; }
+    game.paused = !game.paused;
+    updateButtons();
+  }
+
+  /* ---------------- tabs ---------------- */
+
+  function showTab(name) {
+    var play = name === "play";
+    el("tabHome").hidden = play;
+    el("tabPlay").hidden = !play;
+    el("tabHomeBtn").classList.toggle("active", !play);
+    el("tabPlayBtn").classList.toggle("active", play);
+    if (!play && game.active && !game.paused) { game.paused = true; updateButtons(); }
+  }
+
+  el("tabHomeBtn").addEventListener("click", function () { showTab("home"); });
+  el("tabPlayBtn").addEventListener("click", function () { showTab("play"); });
   el("refresh").addEventListener("click", load);
+  el("newGame").addEventListener("click", newGame);
+  el("bingoBtn").addEventListener("click", claim);
+  el("pauseBtn").addEventListener("click", togglePause);
+
   load();
 })();
 </script>
