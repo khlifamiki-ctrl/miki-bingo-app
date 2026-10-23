@@ -109,6 +109,37 @@
   .subtext { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 12px; line-height: 1.5; }
   .result { text-align: center; padding: 12px; border-radius: 12px; background: #1a1d2e; border: 1px solid var(--line); margin-bottom: 12px; font-weight: 600; }
   .result.win { border-color: var(--green); color: var(--green); }
+  button.pill { color: var(--text); font-family: inherit; cursor: pointer; }
+  .pickhead { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; font-weight: 700; }
+  .pickhead b { color: var(--gold); }
+  .pickgrid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 8px; }
+  .pk {
+    aspect-ratio: 1; border-radius: 8px; background: #1a1d2e; color: var(--text);
+    border: 1px solid var(--line); font-size: 12px; font-weight: 700; padding: 0; font-family: inherit;
+  }
+  .pk.mine { background: var(--gold); color: #1a1d2e; border-color: var(--gold); }
+  .pk.taken { opacity: 0.22; }
+  .legend { display: flex; gap: 14px; justify-content: center; color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .legend .lf { background: #1a1d2e; border: 1px solid var(--line); }
+  .legend .lm { background: var(--gold); }
+  .legend .lt { background: #555; opacity: 0.4; }
+  .callboard { background: #1a1d2e; border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px; margin-bottom: 12px; }
+  .crow { display: flex; gap: 2px; margin: 2px 0; align-items: center; }
+  .clab { width: 18px; text-align: center; font-weight: 800; font-size: 12px; flex: none; }
+  .clab.c0 { color: #60a5fa; } .clab.c1 { color: #f87171; } .clab.c2 { color: #34d399; }
+  .clab.c3 { color: #fbbf24; } .clab.c4 { color: #a78bfa; }
+  .cnum { flex: 1; text-align: center; font-size: 10px; padding: 3px 0; border-radius: 4px; color: var(--muted); background: #242842; min-width: 0; }
+  .cnum.on { color: #fff; font-weight: 700; }
+  .cnum.on.r0 { background: #3b82f6; } .cnum.on.r1 { background: #ef4444; } .cnum.on.r2 { background: #10b981; }
+  .cnum.on.r3 { background: #f59e0b; } .cnum.on.r4 { background: #8b5cf6; }
+  .cnum.last { outline: 2px solid #fff; }
+  .mycard { margin-bottom: 12px; padding: 8px; border-radius: 12px; border: 1px solid var(--line); background: #1f2340; }
+  .mycard.win { border-color: var(--green); box-shadow: 0 0 0 2px rgba(62,207,142,0.35); }
+  .mytitle { font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+  .grid.mini { gap: 4px; margin-bottom: 0; }
+  .grid.mini .cell { font-size: 15px; border-radius: 8px; }
+  .grid.mini .gh { font-size: 14px; }
 
   /* ---- profile + help ---- */
   .who { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
@@ -169,13 +200,22 @@
         <span class="pill">👥 <b id="lvPlayers">0</b></span>
         <span class="pill">💰 ድስት <b id="lvPot">0</b></span>
         <span class="pill" id="lvTimerPill" hidden>⏳ <b id="lvTimer">0</b>s</span>
+        <button class="pill" id="lvSound" type="button" aria-label="ድምጽ">🔇</button>
       </div>
 
       <div id="lvResult" class="result" hidden></div>
       <div id="lvBig" class="bigtext"></div>
       <div id="lvSub" class="subtext"></div>
 
-      <div id="lvBoard" hidden>
+      <div id="lvPicker" hidden>
+        <div class="pickhead"><span>🎟 ካርድህን ምረጥ</span><b id="lvPickCount">0 / 4</b></div>
+        <div class="pickgrid" id="lvPickGrid"></div>
+        <div class="legend"><span><i class="lf"></i>ነጻ</span><span><i class="lm"></i>የእኔ</span><span><i class="lt"></i>ተወስዷል</span></div>
+        <button class="btn ghost" id="lvRandom" type="button">🎲 በዘፈቀደ ምረጥ</button>
+      </div>
+
+      <div id="lvCallWrap" hidden>
+        <div class="callboard" id="lvCall"></div>
         <div class="ballrow">
           <div class="ball" id="lvBall">—</div>
           <div class="callinfo">
@@ -183,14 +223,13 @@
             <div class="recent" id="lvRecent"></div>
           </div>
         </div>
-        <div class="grid" id="lvGrid"></div>
-        <button class="btn" id="lvBingo" type="button">🎯 BINGO!</button>
       </div>
 
-      <button class="btn" id="lvJoin" type="button" hidden>▶️ ተቀላቀል</button>
+      <div id="lvCards" hidden></div>
+      <button class="btn" id="lvBingo" type="button" hidden>🎯 BINGO!</button>
       <div class="msg" id="lvMsg"></div>
     </section>
-    <p class="note">ቁጥሮች በየ5 ሰከንዱ በራስ-ሰር ይወጣሉ። ሙሉ ረድፍ፣ አምድ ወይም ሰያፍ ሲሞላ BINGO! ቀድመህ ተጫን፤ አሸናፊው ሙሉውን ድስት ይወስዳል። ከቦቱ <b>/live</b> የተቀላቀሉ ተጫዋቾችም በዚሁ ዙር ውስጥ ናቸው።</p>
+    <p class="note">እያንዳንዱ ካርድ <b>10 ሳንቲም</b> ነው፤ እስከ 4 ካርድ መያዝ ትችላለህ። ዙሩ ከመጀመሩ በፊት ካርድህን መመለስ (ክፍያው ይመለሳል) ወይም መቀየር ትችላለህ። ቁጥሮች በየ5 ሰከንዱ ይወጣሉ፤ ከካርዶችህ አንዱ ላይ መስመር ሲሞላ BINGO! ቀድመህ ተጫን፣ አሸናፊው ሙሉውን ድስት ይወስዳል።</p>
   </div>
 
   <div id="tabPlay" hidden>
@@ -587,7 +626,7 @@
   /* ---------------- live round (shared with all players) ---------------- */
 
   var POLL_MS = 2000;
-  var live = { timer: null, state: null, busy: false, cardKey: "" };
+  var live = { timer: null, busy: false, callBuilt: false, cardsKey: "", count: 0, sound: false, audio: null };
 
   function api(method, path) {
     return Promise.resolve().then(function () {
@@ -604,51 +643,153 @@
     m.className = "msg" + (cls ? " " + cls : "");
   }
   function setHidden(id, hide) { el(id).hidden = !!hide; }
+  function toSet(list) {
+    var s = {};
+    (list || []).forEach(function (n) { s[n] = true; });
+    return s;
+  }
+  function tap(kind) {
+    try { tg.HapticFeedback.impactOccurred(kind || "light"); } catch (e) {}
+  }
+  function beep() {
+    if (!live.sound) { return; }
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { return; }
+      live.audio = live.audio || new AC();
+      var o = live.audio.createOscillator();
+      var g = live.audio.createGain();
+      o.connect(g);
+      g.connect(live.audio.destination);
+      o.frequency.value = 660;
+      g.gain.value = 0.08;
+      o.start();
+      o.stop(live.audio.currentTime + 0.12);
+    } catch (e) {}
+  }
 
-  function drawLiveGrid(card, drawn) {
-    var key = JSON.stringify(card);
-    var grid = el("lvGrid");
-    if (live.cardKey !== key) {            // build the card once per round
-      live.cardKey = key;
-      grid.textContent = "";
-      for (var h = 0; h < 5; h++) {
-        var head = document.createElement("div");
-        head.className = "gh";
-        head.textContent = LETTERS.charAt(h);
-        grid.appendChild(head);
-      }
-      for (var r = 0; r < 5; r++) {
-        for (var c = 0; c < 5; c++) {
-          var v = card[r][c];
-          var cell = document.createElement("div");
-          cell.className = "cell" + (v === 0 ? " free" : "");
-          cell.textContent = v === 0 ? "★" : String(v);
-          cell.setAttribute("data-n", String(v));
-          grid.appendChild(cell);
-        }
-      }
+  /* --- the numbered card board (pick your cards) --- */
+  function buildPicker(size) {
+    var grid = el("lvPickGrid");
+    if (grid.children.length === size) { return; }
+    grid.textContent = "";
+    for (var n = 1; n <= size; n++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "pk";
+      b.textContent = String(n);
+      b.setAttribute("data-n", String(n));
+      grid.appendChild(b);
     }
-    var set = {};
-    drawn.forEach(function (n) { set[n] = true; });
-    var cells = grid.querySelectorAll(".cell");
+  }
+  function markPicker(mine, taken) {
+    var m = toSet(mine), t = toSet(taken);
+    var btns = el("lvPickGrid").children;
+    for (var i = 0; i < btns.length; i++) {
+      var n = Number(btns[i].getAttribute("data-n"));
+      var cls = "pk" + (m[n] ? " mine" : (t[n] ? " taken" : ""));
+      if (btns[i].className !== cls) { btns[i].className = cls; }
+      btns[i].disabled = !!t[n];
+    }
+  }
+
+  /* --- the 1-75 board of called numbers --- */
+  function buildCallBoard() {
+    if (live.callBuilt) { return; }
+    var box = el("lvCall");
+    box.textContent = "";
+    for (var r = 0; r < 5; r++) {
+      var row = document.createElement("div");
+      row.className = "crow";
+      var lab = document.createElement("span");
+      lab.className = "clab c" + r;
+      lab.textContent = LETTERS.charAt(r);
+      row.appendChild(lab);
+      for (var k = 1; k <= 15; k++) {
+        var n = r * 15 + k;
+        var c = document.createElement("span");
+        c.className = "cnum r" + r;
+        c.textContent = String(n);
+        c.setAttribute("data-n", String(n));
+        row.appendChild(c);
+      }
+      box.appendChild(row);
+    }
+    live.callBuilt = true;
+  }
+  function markCallBoard(drawn) {
+    var set = toSet(drawn);
+    var last = drawn.length ? drawn[drawn.length - 1] : 0;
+    var cells = el("lvCall").querySelectorAll(".cnum");
     for (var i = 0; i < cells.length; i++) {
       var n = Number(cells[i].getAttribute("data-n"));
       cells[i].classList.toggle("on", set[n] === true);
+      cells[i].classList.toggle("last", n === last);
+    }
+  }
+
+  /* --- my cards --- */
+  function renderMyCards(cards, drawn) {
+    var box = el("lvCards");
+    var key = JSON.stringify(cards.map(function (c) { return [c.no, c.card]; }));
+    if (live.cardsKey !== key) {
+      live.cardsKey = key;
+      box.textContent = "";
+      cards.forEach(function (c) {
+        var wrap = document.createElement("div");
+        wrap.className = "mycard";
+        var title = document.createElement("div");
+        title.className = "mytitle";
+        title.textContent = "🎟 ካርድ #" + c.no;
+        var grid = document.createElement("div");
+        grid.className = "grid mini";
+        for (var h = 0; h < 5; h++) {
+          var head = document.createElement("div");
+          head.className = "gh";
+          head.textContent = LETTERS.charAt(h);
+          grid.appendChild(head);
+        }
+        for (var r = 0; r < 5; r++) {
+          for (var k = 0; k < 5; k++) {
+            var v = c.card[r][k];
+            var cell = document.createElement("div");
+            cell.className = "cell" + (v === 0 ? " free" : "");
+            cell.textContent = v === 0 ? "★" : String(v);
+            cell.setAttribute("data-n", String(v));
+            grid.appendChild(cell);
+          }
+        }
+        wrap.appendChild(title);
+        wrap.appendChild(grid);
+        box.appendChild(wrap);
+      });
+    }
+    var set = toSet(drawn);
+    for (var i = 0; i < box.children.length; i++) {
+      var cells = box.children[i].querySelectorAll(".cell");
+      for (var j = 0; j < cells.length; j++) {
+        var n = Number(cells[j].getAttribute("data-n"));
+        cells[j].classList.toggle("on", set[n] === true);
+      }
+      box.children[i].classList.toggle("win", !!(cards[i] && cards[i].has_bingo));
     }
   }
 
   function renderLive(d) {
-    live.state = d;
     var state = d.state;
     var you = d.you;
     var drawn = d.drawn || [];
+    var mine = d.mine || [];
+    var maxCards = d.max_cards || 4;
+    var running = state === "running";
+    var picking = state === "none" || state === "lobby";
 
     el("lvPlayers").textContent = String(d.players || 0);
     el("lvPot").textContent = fmt(d.pot || 0);
     setHidden("lvTimerPill", state !== "lobby");
     if (state === "lobby") { el("lvTimer").textContent = String(d.starts_in || 0); }
 
-    // result of the round that just ended
+    // how the round that just ended finished
     var res = el("lvResult");
     if (state === "none" && d.last) {
       res.hidden = false;
@@ -665,48 +806,57 @@
       res.hidden = true;
     }
 
-    var showBoard = !!you && (state === "lobby" || state === "running");
-    setHidden("lvBoard", !showBoard);
-    if (showBoard) {
-      drawLiveGrid(you.card, drawn);
-      el("lvCount").textContent = drawn.length + " / 75";
-      var last = drawn.length ? drawn[drawn.length - 1] : null;
-      el("lvBall").textContent = last ? ballName(last) : "—";
-      var before = drawn.slice(-6, -1).reverse().map(ballName).join(", ");
-      el("lvRecent").textContent = before ? "ከዚህ በፊት: " + before : "";
-      el("lvBingo").disabled = state !== "running";
-      el("lvBingo").classList.toggle("ready", state === "running" && hasBingo(you.card, (function () {
-        var s = {}; drawn.forEach(function (n) { s[n] = true; }); return s;
-      })()));
-    } else {
-      live.cardKey = "";
+    // card board (before the round starts)
+    setHidden("lvPicker", !picking);
+    if (picking) {
+      buildPicker(d.pool_size || 100);
+      markPicker(mine, d.taken || []);
+      el("lvPickCount").textContent = mine.length + " / " + maxCards;
+      setHidden("lvRandom", mine.length >= maxCards);
     }
 
-    var big = "", sub = "", joinText = "", showJoin = false;
+    // 1-75 board + current ball (while the round runs)
+    setHidden("lvCallWrap", !running);
+    if (running) {
+      buildCallBoard();
+      markCallBoard(drawn);
+      var last = drawn.length ? drawn[drawn.length - 1] : null;
+      el("lvBall").textContent = last ? ballName(last) : "—";
+      el("lvCount").textContent = drawn.length + " / 75";
+      var before = drawn.slice(-6, -1).reverse().map(ballName).join(", ");
+      el("lvRecent").textContent = before ? "ከዚህ በፊት: " + before : "";
+      if (drawn.length > live.count) { beep(); }
+      live.count = drawn.length;
+    } else {
+      live.count = 0;
+    }
+
+    // my cards
+    var showCards = !!you && (state === "lobby" || running);
+    setHidden("lvCards", !showCards);
+    if (showCards) { renderMyCards(you.cards, drawn); } else { live.cardsKey = ""; }
+
+    // BINGO button
+    var showBingo = running && !!you;
+    setHidden("lvBingo", !showBingo);
+    el("lvBingo").classList.toggle("ready", showBingo && !!you.has_bingo);
+
+    var big = "", sub = "";
     if (state === "none") {
       big = "አሁን ዙር የለም";
-      sub = "አዲስ ዙር ጀምር፤ ሌሎች ለ60 ሰከንድ ይቀላቀላሉ። መግቢያ " + d.entry_fee + " ሳንቲም ነው።";
-      joinText = "▶️ አዲስ ዙር ጀምር (" + d.entry_fee + " ሳንቲም)";
-      showJoin = true;
+      sub = "ካርድ ምረጥ፤ የመጀመሪያው ምርጫህ አዲስ ዙር ይከፍታል። አንድ ካርድ " + d.entry_fee + " ሳንቲም ነው።";
     } else if (state === "lobby" && !you) {
       big = "ዙር እየጀመረ ነው!";
-      sub = "ቢያንስ " + d.min_players + " ተጫዋች ያስፈልጋል።";
-      joinText = "✅ ተቀላቀል (" + d.entry_fee + " ሳንቲም)";
-      showJoin = true;
-    } else if (state === "lobby" && you) {
-      big = "ተቀላቅለሃል ✅";
-      sub = "ዙሩ ሲጀምር ቁጥሮች በራስ-ሰር ይወጣሉ። (ቢያንስ " + d.min_players + " ተጫዋች ያስፈልጋል)";
-    } else if (state === "running" && you) {
-      big = "";
-      sub = "";
-    } else if (state === "running") {
+      sub = "ቢያንስ " + d.min_players + " ተጫዋች ያስፈልጋል። ካርድህን ምረጥ።";
+    } else if (state === "lobby") {
+      big = "ተቀላቅለሃል ✅ (" + mine.length + " ካርድ)";
+      sub = "ዙሩ ሲጀምር ቁጥሮች በራስ-ሰር ይወጣሉ። ካርድ ማከል ወይም መመለስ ትችላለህ። (ቢያንስ " + d.min_players + " ተጫዋች ያስፈልጋል)";
+    } else if (running && !you) {
       big = "ዙር በሂደት ላይ ነው";
-      sub = drawn.length + " / 75 ቁጥሮች ወጥተዋል። ቀጣዩን ዙር ጠብቅ።";
+      sub = "ቀጣዩን ዙር ጠብቅ።";
     }
     el("lvBig").textContent = big;
     el("lvSub").textContent = sub;
-    el("lvJoin").textContent = joinText;
-    setHidden("lvJoin", !showJoin);
   }
 
   function pollLive() {
@@ -731,26 +881,63 @@
     if (live.timer) { clearInterval(live.timer); live.timer = null; }
   }
 
-  function joinLive() {
+  function pickMessage(d, n, wasMine) {
+    if (d.status === "picked") {
+      lvMsg("✅ ካርድ #" + n + " ተይዟል (−" + d.entry_fee + ")", "win");
+      tap("light");
+      load();
+    } else if (d.status === "removed") {
+      lvMsg("↩️ ካርድ #" + n + " ተመልሷል (+" + d.entry_fee + ")");
+      tap("light");
+      load();
+    } else if (d.status === "taken") {
+      lvMsg("😅 ይህ ካርድ በሌላ ሰው ተወስዷል።", "bad");
+      haptic("error");
+    } else if (d.status === "limit") {
+      lvMsg("እስከ " + d.max_cards + " ካርድ ብቻ መያዝ ትችላለህ።", "bad");
+    } else if (d.status === "no_coins") {
+      lvMsg("💸 ሳንቲምህ አይበቃም። በቦቱ /spin ወይም /daily ሞክር።", "bad");
+      haptic("error");
+    } else if (d.status === "full") {
+      lvMsg("🚫 ዙሩ ሞልቷል። ቀጣዩን ጠብቅ።", "bad");
+    } else if (d.status === "running") {
+      lvMsg("ዙር ተጀምሯል፤ ካርድ መቀየር አይቻልም።", "bad");
+    }
+  }
+
+  function pickCard(n) {
     if (live.busy) { return; }
+    var btn = null, btns = el("lvPickGrid").children;
+    for (var i = 0; i < btns.length; i++) {
+      if (Number(btns[i].getAttribute("data-n")) === n) { btn = btns[i]; break; }
+    }
+    if (!btn || btn.disabled) { return; }
+    var wasMine = btn.className.indexOf("mine") >= 0;
     live.busy = true;
     lvMsg("");
-    api("POST", "/api/live/join").then(function (d) {
+    api("POST", (wasMine ? "/api/live/unpick" : "/api/live/pick") + "?card=" + n).then(function (d) {
       renderLive(d);
-      if (d.status === "no_coins") {
-        lvMsg("💸 ሳንቲምህ አይበቃም። በቦቱ /spin ወይም /daily ሞክር።", "bad");
-        haptic("error");
-      } else if (d.status === "full") {
-        lvMsg("🚫 ዙሩ ሞልቷል። ቀጣዩን ጠብቅ።", "bad");
-      } else if (d.status === "running") {
-        lvMsg("ዙር ተጀምሯል፤ ቀጣዩን ጠብቅ።", "bad");
-      } else if (d.status === "joined") {
-        haptic("success");
-        load();                               // balance went down by the entry fee
-      }
+      pickMessage(d, n, wasMine);
     }).catch(function () {
-      lvMsg("መቀላቀል አልተቻለም። እንደገና ሞክር።", "bad");
+      lvMsg("መላክ አልተቻለም። እንደገና ሞክር።", "bad");
     }).then(function () { live.busy = false; });
+  }
+
+  function onPickGridClick(ev) {
+    var t = ev.target;
+    while (t && t !== el("lvPickGrid") && !(t.getAttribute && t.getAttribute("data-n"))) { t = t.parentNode; }
+    if (t && t.getAttribute && t.getAttribute("data-n")) { pickCard(Number(t.getAttribute("data-n"))); }
+  }
+
+  function randomCard() {
+    var free = [], btns = el("lvPickGrid").children;
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].className.indexOf("mine") < 0 && btns[i].className.indexOf("taken") < 0) {
+        free.push(Number(btns[i].getAttribute("data-n")));
+      }
+    }
+    if (!free.length) { lvMsg("ነጻ ካርድ የለም።", "bad"); return; }
+    pickCard(free[Math.floor(Math.random() * free.length)]);
   }
 
   function claimLive() {
@@ -777,6 +964,12 @@
     }).then(function () { live.busy = false; });
   }
 
+  function toggleSound() {
+    live.sound = !live.sound;
+    el("lvSound").textContent = live.sound ? "🔊" : "🔇";
+    if (live.sound) { beep(); }
+  }
+
   /* ---------------- tabs ---------------- */
 
   var TABS = ["home", "live", "play", "profile", "help"];
@@ -798,7 +991,9 @@
   el("copyId").addEventListener("click", function () { copyText(myId() || (initData ? "" : "123456789"), "✅ ID ተቀድቷል"); });
   el("copyLink").addEventListener("click", function () { copyText(refLink() || (initData ? "" : "https://t.me/" + BOT_USERNAME + "?start=123456789"), "✅ link ተቀድቷል"); });
   el("shareLink").addEventListener("click", shareLink);
-  el("lvJoin").addEventListener("click", joinLive);
+  el("lvPickGrid").addEventListener("click", onPickGridClick);
+  el("lvRandom").addEventListener("click", randomCard);
+  el("lvSound").addEventListener("click", toggleSound);
   el("lvBingo").addEventListener("click", claimLive);
   el("refresh").addEventListener("click", load);
   el("newGame").addEventListener("click", newGame);
