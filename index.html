@@ -90,7 +90,8 @@
   .gh { text-align: center; font-weight: 800; color: var(--gold); font-size: 18px; padding: 2px 0; }
   .cell {
     aspect-ratio: 1; border-radius: 10px; background: #1a1d2e;
-    border: 1px solid var(--line); display: flex; align-items: center;
+
+border: 1px solid var(--line); display: flex; align-items: center;
     justify-content: center; font-size: 18px; font-weight: 700;
   }
   .cell.on { background: var(--gold); color: #1a1d2e; border-color: var(--gold); }
@@ -141,7 +142,10 @@
   .grid.mini .cell { font-size: 15px; border-radius: 8px; }
   .grid.mini .gh { font-size: 14px; }
 
-  /* ---- profile + help ---- */
+  .codein { flex: 1; min-width: 0; background: #1a1d2e; color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 16px; font-family: inherit; text-transform: uppercase; }
+  .codein:focus { outline: 2px solid var(--gold); }
+
+/* ---- profile + help ---- */
   .who { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
   .avatar {
     width: 60px; height: 60px; border-radius: 50%; flex: none;
@@ -190,6 +194,7 @@
       <ol id="top"></ol>
     </section>
 
+    <button class="btn ghost" id="dailyBtn" type="button" style="margin-bottom:10px">🎁 ዕለታዊ ስጦታ</button>
     <button class="btn" id="refresh" type="button">🔄 አድስ</button>
     <p id="status"></p>
   </div>
@@ -232,7 +237,7 @@
     <p class="note">እያንዳንዱ ካርድ <b>10 ሳንቲም</b> ነው፤ እስከ 4 ካርድ መያዝ ትችላለህ። ዙሩ ከመጀመሩ በፊት ካርድህን መመለስ (ክፍያው ይመለሳል) ወይም መቀየር ትችላለህ። ቁጥሮች በየ5 ሰከንዱ ይወጣሉ፤ ከካርዶችህ አንዱ ላይ መስመር ሲሞላ BINGO! ቀድመህ ተጫን፣ አሸናፊው ሙሉውን ድስት ይወስዳል።</p>
   </div>
 
-  <div id="tabPlay" hidden>
+<div id="tabPlay" hidden>
     <section class="card">
       <div class="ballrow">
         <div class="ball" id="ball">—</div>
@@ -270,6 +275,15 @@
     </section>
 
     <section class="card">
+      <h2>🎟 የስጦታ ኮድ</h2>
+      <div class="row" style="margin-top:0">
+        <input id="codeInput" class="codein" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="ኮድ አስገባ">
+        <button class="btn" id="redeemBtn" type="button" style="flex:none;width:auto;padding:12px 18px">ተቀበል</button>
+      </div>
+      <div class="msg" id="codeMsg"></div>
+    </section>
+
+    <section class="card">
       <h2>👥 ጓደኛ ጋብዝ</h2>
       <div class="who-sub">ጓደኛህ በአንተ link ሲገባ አንተ <b style="color:var(--gold)">+100</b>፣ እሱ <b style="color:var(--gold)">+50</b> ሳንቲም ያገኛል።</div>
       <div class="linkbox" id="refLink">—</div>
@@ -298,6 +312,7 @@
       <div class="help-item"><span class="cmd">/jackpot</span> — 50 ሳንቲም፤ 1/20 እድል፣ 800 ሳንቲም።</div>
       <div class="help-item"><span class="cmd">/live</span> — 10 ሳንቲም፤ ከሌሎች ተጫዋቾች ጋር የቀጥታ ዙር፤ አሸናፊው ሙሉውን ድስት ይወስዳል።</div>
       <div class="help-item"><span class="cmd">/send</span> — ለጓደኛ ሳንቲም ላክ (<span class="cmd">/send ID ብዛት</span>)። ID በ«መገለጫ» ውስጥ ይገኛል።</div>
+      <div class="help-item"><span class="cmd">/redeem</span> — የስጦታ ኮድ ተጠቀም (<span class="cmd">/redeem ኮድ</span>)፤ ወይም በ«መገለጫ» ውስጥ አስገባ።</div>
       <div class="help-item"><span class="cmd">/top</span> — ከፍተኛ ተጫዋቾች፤ <span class="cmd">/balance</span> — ቀሪ ሂሳብ።</div>
       <div class="help-item">ዋጋዎች እና ሽልማቶች ሊቀየሩ ይችላሉ።</div>
     </section>
@@ -342,6 +357,7 @@
     el("hello").textContent = d.name ? "ሰላም " + d.name + " 👋" : "እንኳን ደህና መጣህ!";
     el("balance").textContent = fmt(d.balance);
     el("rank").textContent = d.rank ? "📍 ደረጃህ: #" + d.rank : "";
+    setDaily(d.daily_left);
 
     var list = el("top");
     list.textContent = "";
@@ -432,7 +448,7 @@
     return card;
   }
 
-  function hasBingo(card, drawnSet) {
+function hasBingo(card, drawnSet) {
     function ok(v) { return v === 0 || drawnSet[v] === true; }
     var i, j, all;
     for (i = 0; i < 5; i++) {
@@ -569,7 +585,7 @@
 
   var BOT_USERNAME = "miki_bingo_bot";
 
-  function myId() {
+function myId() {
     var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     return u && u.id ? String(u.id) : "";
   }
@@ -649,26 +665,33 @@
     return s;
   }
   function tap(kind) {
+    sfx("ui");
     try { tg.HapticFeedback.impactOccurred(kind || "light"); } catch (e) {}
   }
-  function beep() {
+  function sfx(kind) {
     if (!live.sound) { return; }
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) { return; }
       live.audio = live.audio || new AC();
-      var o = live.audio.createOscillator();
-      var g = live.audio.createGain();
+      var S = { ball: [660, 760, 0.12, "sine", 0.08], ui: [440, 520, 0.06, "sine", 0.06],
+                win: [523, 1046, 0.5, "sine", 0.12], lose: [220, 70, 0.4, "sawtooth", 0.07] };
+      var p = S[kind] || S.ball, t = live.audio.currentTime;
+      var o = live.audio.createOscillator(), g = live.audio.createGain();
+      o.type = p[3];
+      o.frequency.setValueAtTime(p[0], t);
+      o.frequency.exponentialRampToValueAtTime(p[1], t + p[2]);
+      g.gain.setValueAtTime(p[4], t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + p[2]);
       o.connect(g);
       g.connect(live.audio.destination);
-      o.frequency.value = 660;
-      g.gain.value = 0.08;
-      o.start();
-      o.stop(live.audio.currentTime + 0.12);
+      o.start(t);
+      o.stop(t + p[2]);
     } catch (e) {}
   }
+  function beep() { sfx("ball"); }
 
-  /* --- the numbered card board (pick your cards) --- */
+/* --- the numbered card board (pick your cards) --- */
   function buildPicker(size) {
     var grid = el("lvPickGrid");
     if (grid.children.length === size) { return; }
@@ -784,7 +807,7 @@
     var running = state === "running";
     var picking = state === "none" || state === "lobby";
 
-    el("lvPlayers").textContent = String(d.players || 0);
+el("lvPlayers").textContent = String(d.players || 0);
     el("lvPot").textContent = fmt(d.pot || 0);
     setHidden("lvTimerPill", state !== "lobby");
     if (state === "lobby") { el("lvTimer").textContent = String(d.starts_in || 0); }
@@ -893,7 +916,8 @@
     } else if (d.status === "taken") {
       lvMsg("😅 ይህ ካርድ በሌላ ሰው ተወስዷል።", "bad");
       haptic("error");
-    } else if (d.status === "limit") {
+
+} else if (d.status === "limit") {
       lvMsg("እስከ " + d.max_cards + " ካርድ ብቻ መያዝ ትችላለህ።", "bad");
     } else if (d.status === "no_coins") {
       lvMsg("💸 ሳንቲምህ አይበቃም። በቦቱ /spin ወይም /daily ሞክር።", "bad");
@@ -946,10 +970,12 @@
     api("POST", "/api/live/claim").then(function (d) {
       if (d.result === "win") {
         lvMsg("🏆 BINGO! " + fmt(d.pot) + " ሳንቲም አሸንፈሃል!", "win");
+        sfx("win");
         haptic("success");
         load();
       } else if (d.result === "not_bingo") {
         lvMsg("❌ ገና BINGO አይደለም። ቀጥል!", "bad");
+        sfx("lose");
         haptic("error");
       } else if (d.result === "wait") {
         lvMsg("ቀጣዩን ቁጥር ጠብቅ፣ ከዚያ እንደገና ሞክር።", "bad");
@@ -968,6 +994,62 @@
     live.sound = !live.sound;
     el("lvSound").textContent = live.sound ? "🔊" : "🔇";
     if (live.sound) { beep(); }
+  }
+
+  /* ---------------- daily gift + gift code ---------------- */
+
+  var giftBusy = false;
+  function setDaily(left) {
+    left = Number(left || 0);
+    var b = el("dailyBtn");
+    b.disabled = left > 0;
+    b.textContent = left > 0
+      ? "⏳ ቀጣይ ስጦታ በ " + Math.floor(left / 3600) + "ሰ " + Math.floor((left % 3600) / 60) + "ደ ውስጥ"
+      : "🎁 ዕለታዊ ስጦታ ተቀበል (+100)";
+  }
+  function claimDaily() {
+    if (giftBusy) { return; }
+    if (!initData) { setStatus("በ Telegram ውስጥ ሲከፈት ይሠራል።"); return; }
+    giftBusy = true;
+    api("POST", "/api/daily").then(function (d) {
+      render(Object.assign({}, lastData, { balance: d.balance, daily_left: d.left }));
+      setStatus(d.ok ? "🎁 +" + d.amount + " ሳንቲም ተቀብለሃል!" : "ዛሬ ተቀብለሃል፤ ቆይተህ ተመለስ።");
+      if (d.ok) { sfx("win"); haptic("success"); }
+    }).catch(function () {
+      setStatus("መላክ አልተቻለም። እንደገና ሞክር።");
+    }).then(function () { giftBusy = false; });
+  }
+  function codeMsg(text, cls) {
+    var m = el("codeMsg");
+    m.textContent = text || "";
+    m.className = "msg" + (cls ? " " + cls : "");
+  }
+
+function redeemCode() {
+    var code = el("codeInput").value.trim();
+    if (!code) { codeMsg("ኮዱን አስገባ።", "bad"); return; }
+    if (!initData) { codeMsg("በ Telegram ውስጥ ሲከፈት ይሠራል።", "bad"); return; }
+    if (giftBusy) { return; }
+    giftBusy = true;
+    api("POST", "/api/redeem?code=" + encodeURIComponent(code)).then(function (d) {
+      var why = { used: "ይህን ኮድ አስቀድመህ ተጠቅመሃል።", empty: "ኮዱ አልቋል።", invalid: "ኮዱ ትክክል አይደለም።", wait: "ጥቂት ሰከንድ ጠብቅ።" };
+      if (d.result === "ok") {
+        codeMsg("🎉 +" + fmt(d.amount) + " ሳንቲም ተቀብለሃል!", "win");
+        el("codeInput").value = "";
+        sfx("win");
+        haptic("success");
+      } else {
+        codeMsg("❌ " + (why[d.result] || "አልተሳካም።"), "bad");
+        sfx("lose");
+        haptic("error");
+      }
+      if (d.balance !== undefined) {
+        render(Object.assign({}, lastData, { balance: d.balance }));
+        renderProfile();
+      }
+    }).catch(function () {
+      codeMsg("መላክ አልተቻለም። እንደገና ሞክር።", "bad");
+    }).then(function () { giftBusy = false; });
   }
 
   /* ---------------- tabs ---------------- */
@@ -996,6 +1078,8 @@
   el("lvSound").addEventListener("click", toggleSound);
   el("lvBingo").addEventListener("click", claimLive);
   el("refresh").addEventListener("click", load);
+  el("dailyBtn").addEventListener("click", claimDaily);
+  el("redeemBtn").addEventListener("click", redeemCode);
   el("newGame").addEventListener("click", newGame);
   el("bingoBtn").addEventListener("click", claim);
   el("pauseBtn").addEventListener("click", togglePause);
