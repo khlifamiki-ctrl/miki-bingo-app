@@ -14,146 +14,81 @@
             margin: 0;
             padding: 20px;
         }
-        .header {
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #ffcc00;
-            font-size: 24px;
-            margin: 5px 0;
-        }
+        .header { margin-bottom: 20px; }
+        h1 { color: #ffcc00; font-size: 24px; margin: 5px 0; }
         .ball-display {
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
             background: radial-gradient(circle at 30% 30%, #ff5e62, #ff9966);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            margin: 15px 0;
+            border-radius: 50%; display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 28px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin: 15px 0;
         }
         .bingo-card {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-width: 320px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+            max-width: 320px; margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1); padding: 12px;
+            border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
         .cell {
-            background: #2e2e4f;
-            border: 2px solid #44447a;
-            border-radius: 8px;
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
+            background: #2e2e4f; border: 2px solid #44447a; border-radius: 8px;
+            height: 55px; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s;
         }
-        .cell:hover {
-            transform: scale(1.05);
-        }
-        .cell.marked {
-            background: #00b4d8;
-            border-color: #90e0ef;
-            color: #fff;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        .cell.free {
-            background: #ffcc00;
-            color: #1e1e2f;
-        }
+        .cell.marked { background: #00b4d8; border-color: #90e0ef; color: #fff; }
+        .cell.free { background: #ffcc00; color: #1e1e2f; }
         .btn {
-            background: linear-gradient(90deg, #4ade80, #22c55e);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            margin-top: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-        }
-        .btn:active {
-            transform: scale(0.98);
+            background: linear-gradient(90deg, #4ade80, #22c55e); color: white;
+            border: none; padding: 12px 30px; font-size: 18px; font-weight: bold;
+            border-radius: 25px; margin-top: 25px; cursor: pointer;
         }
     </style>
 </head>
 <body>
-
     <div class="header">
         <h1>🎱 Miki Bingo 🎱</h1>
         <p>የተሳበው ቁጥር</p>
         <div class="ball-display" id="currentBall">-</div>
     </div>
-
-    <!-- የቢንጎ ካርድ መስሪያ -->
     <div class="bingo-card" id="bingoCard"></div>
-
     <button class="btn" onclick="checkBingo()">🔥 BINGO! 🔥</button>
 
     <script>
-        // የቴሌግራም ዌብ አፕን ማስጀመር
         const tg = window.Telegram.WebApp;
-        tg.expand(); // ሙሉ ስክሪን ማድረግ
+        tg.expand();
 
-        // የቢንጎ ካርድ ቁጥሮችን በዘፈቀደ ማመንጨት
         function generateCard() {
             const cardContainer = document.getElementById('bingoCard');
             cardContainer.innerHTML = '';
             const usedNumbers = new Set();
-
             for (let i = 0; i < 25; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
-
                 if (i === 12) {
                     cell.textContent = 'FREE';
                     cell.classList.add('free', 'marked');
                 } else {
                     let num;
-                    do {
-                        num = Math.floor(Math.random() * 75) + 1;
-                    } while (usedNumbers.has(num));
+                    do { num = Math.floor(Math.random() * 75) + 1; } while (usedNumbers.has(num));
                     usedNumbers.add(num);
                     cell.textContent = num;
-                    
-                    cell.onclick = function() {
-                        cell.classList.toggle('marked');
-                    };
+                    cell.onclick = function() { cell.classList.toggle('marked'); };
                 }
                 cardContainer.appendChild(cell);
             }
         }
 
-        // ቁጥሮችን በየጊዜው መሳብ ማስመሰል
         function startBallDrawing() {
             const ballDisplay = document.getElementById('currentBall');
             setInterval(() => {
-                const randomBall = Math.floor(Math.random() * 75) + 1;
-                ballDisplay.textContent = randomBall;
-            }, 5000); // በየ 5 ሰከንዱ አዲስ ቁጥር ይወጣል
+                ballDisplay.textContent = Math.floor(Math.random() * 75) + 1;
+            }, 5000);
         }
 
         function checkBingo() {
-            tg.showPopup({
-                title: 'የማረጋገጫ መልዕክት',
-                message: 'ካርድዎ ተረጋግጦ ይላካል!',
-                buttons: [{type: 'ok'}]
-            });
+            tg.showPopup({ title: 'ማረጋገጫ', message: 'ካርድዎ ተረጋግጧል!', buttons: [{type: 'ok'}] });
         }
 
-        // ጨዋታውን አስጀምር
         generateCard();
         startBallDrawing();
     </script>
